@@ -1,0 +1,2 @@
+all:
+	nesasm shuffle.asm
