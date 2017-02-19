@@ -81,17 +81,17 @@ LoadBackground:
   sta pointerLo
   ldx #$00
   ldy #$00
-  LBOutsideLoop:
-    LBInsideLoop:
+  .OutsideLoop:
+    .InsideLoop:
     lda [pointerLo], Y
     sta $2007
     iny
     cpy #$00
-    bne LBInsideLoop
+    bne .InsideLoop
   inc pointerHi
   inx
   cpx #$04
-  bne LBOutsideLoop
+  bne .OutsideLoop
   rts
 
 Reset:
@@ -127,13 +127,13 @@ ClearMemory:
 PBalls:
   ldx #$00
   lda #$10
-  PBLoop:
+  .Loop:
     sta pballs, X
     inx
     clc
     adc #$04
     cpx #$0F
-    bne PBLoop
+    bne .Loop
 
 VBlankWait2:
   bit $2002
@@ -142,21 +142,21 @@ VBlankWait2:
 LoadPalettes:
   CopyToPPUInit #$3F, #$00
   ldx #$00
-  LPLoop:
+  .Loop:
     lda palette, X
     sta $2007
     inx
     cpx #$20
-    bne LPLoop
+    bne .Loop
 
 LoadSprites:
   ldx #$00
-  LSLoop:
+  .Loop:
     lda sprites, X
     sta $0200, X
     inx
     cpx #$10
-    bne LSLoop
+    bne .Loop
 
 LoadInitBackground:
   lda #high(background)
@@ -171,11 +171,11 @@ LoadInitBackground:
 InitGlobals:
   ldx #$00
   lda #$00
-  IGLoop:
+  .Loop:
     sta controller, X
     inx
     cpx #$0F
-    bne IGLoop
+    bne .Loop
 
   lda #%10011000
   sta soft2000
@@ -190,22 +190,22 @@ InitGlobals:
 
 WaitFrame:
   inc sleeping
-  WFLoop:
+  .Loop:
     lda sleeping
-    bne WFLoop
+    bne .Loop
   rts
 
 PRNG:
   ldx #$08
   lda prngSeed
-  POutsideLoop:
-  asl A
-  rol prngSeed+1
-  bcc PInsideLoop
-  eor #$2D
-  PInsideLoop:
-  dex
-  bne POutsideLoop
+  .OutsideLoop:
+    asl A
+    rol prngSeed+1
+    bcc .InsideLoop
+    eor #$2D
+    .InsideLoop:
+    dex
+    bne .OutsideLoop
   sta prngSeed+0
   cmp #$00
   rts
@@ -214,14 +214,14 @@ GetSpeed:
   jsr PRNG
   and #SPEED_MASK
   cmp #SPEED_MIN
-  bcc MinChecked
+  bcc .MinChecked
   lda #SPEED_MIN
   rts
-  MinChecked:
+  .MinChecked:
     cmp #SPEED_MAX
-    bcs MaxChecked
+    bcs .MaxChecked
     lda #SPEED_MAX
-  MaxChecked:
+  .MaxChecked:
     rts
 
 ReadController:
@@ -235,7 +235,7 @@ ReadController:
   asl A
   sta controller
   ldx #$00
-  ReadController1Loop:
+  .Loop:
     lda $4016
     and $FF
     ora controller
@@ -243,7 +243,7 @@ ReadController:
     sta controller
     inx
     cpx #$06
-    bne ReadController1Loop
+    bne .Loop
   lda $4016
   and $FF
   ora controller
@@ -255,44 +255,44 @@ HandleControllerInput:
   sta playermoved
   lda controller
   and #%00001000
-  beq UpDone
+  beq .UpDone
   Decrement $0200
   Decrement $0204
   Decrement $0208
   Decrement $020C
   lda #$01
   sta playermoved
-  UpDone:
+  .UpDone:
     lda controller
     and #%00000100
-    beq DownDone
+    beq .DownDone
     Increment $0200
     Increment $0204
     Increment $0208
     Increment $020C
     lda #$01
     sta playermoved
-  DownDone:
+  .DownDone:
     lda controller
     and #%00000010
-    beq LeftDone
+    beq .LeftDone
     Decrement $0203
     Decrement $0207
     Decrement $020B
     Decrement $020F
     lda #$01
     sta playermoved
-  LeftDone:
+  .LeftDone:
     lda controller
     and #%00000001
-    beq RightDone
+    beq .RightDone
     Increment $0203
     Increment $0207
     Increment $020B
     Increment $020F
     lda #$01
     sta playermoved
-  RightDone:
+  .RightDone:
     rts
 
 InitPlay:
@@ -325,34 +325,34 @@ IncrementScore:
   ldx #$00
   lda playermoved
   cmp #$01
-  beq ISFinished
-  ISLoop:
+  beq .Finished
+  .Loop:
     lda score, X
     clc
     adc #$01
     sta score, X
     cmp #$0A
-    bne ISIncFinished
+    bne .IncFinished
     lda #$00
     sta score, X
     inx
     cpx #$04
-    bne ISLoop
-  ISIncFinished:
+    bne .Loop
+  .IncFinished:
     lda #$01
     sta needScore
-  ISFinished:
+  .Finished:
     rts
 
 DrawScore:
   ldx #$04
   CopyToPPUInit #SCORE_BG_INDEX_HI, #SCORE_BG_INDEX_LO
-  DSLoop:
+  .Loop:
     lda score, X
     sta $2007
     dex
     cpx #$00
-    bne DSLoop
+    bne .Loop
   lda #$00
   sta $2007
   sta $2005
@@ -362,11 +362,11 @@ DrawScore:
 SpawnBall:
   lda frames
   and #$0F
-  bne SBFinished
+  bne .Finished
   lda balls
   clc
   cmp #BALLS_MAX
-  bcs SBFinished
+  bcs .Finished
   tax
   lda pballs, X
   tay
@@ -380,11 +380,11 @@ SpawnBall:
   lda sprpal
   and #$03
   cmp #$00
-  bne SBContinue
+  bne .Continue
   inc sprpal
   lda sprpal
   and #$03
-  SBContinue:
+  .Continue:
   sta $0200, Y
   iny
   jsr PRNG
@@ -407,64 +407,64 @@ SpawnBall:
 
   lda xsballs, X
   cmp ysballs, X
-  bne SBSpeedOK
+  bne .SpeedOK
   cmp #SPEED_MAX
-  bne SBIncrement
+  bne .Increment
   dec xsballs, X
-  jmp SBSpeedOK
-  SBIncrement:
+  jmp .SpeedOK
+  .Increment:
     inc xsballs, X
-  SBSpeedOK:
+  .SpeedOK:
     inc balls
-  SBFinished:
+  .Finished:
     rts
 
 MoveBalls:
   lda balls
   cmp #$00
-  beq MBFinished
+  beq .Finished
   ldx #$00
-  MBLoop:
+  .Loop:
     lda ysiballs, X
     cmp #$01
-    beq YPositive
+    beq .YPositive
     lda pballs, X
     tay
     lda $0200, Y
     sec
     sbc ysballs, X
     sta $0200, Y
-    jmp YFinished
-  YPositive:
+    jmp .YFinished
+  .YPositive:
     lda pballs, X
     tay
     lda $0200, Y
     clc
     adc ysballs, X
     sta $0200, Y
-  YFinished:
+  .YFinished:
     lda xsiballs, X
     cmp #$01
-    beq XPositive
+    beq .XPositive
     lda pballs, X
     tay
     lda $0203, Y
     sec
     sbc xsballs, X
     sta $0203, Y
-    jmp XFinished
-  XPositive:
+    jmp .XFinished
+  .XPositive:
     lda pballs, X
     tay
     lda $0203, Y
     clc
     adc xsballs, X
     sta $0203, Y
-  XFinished:
+  .XFinished:
     inx
     cpx balls
-    bne MBLoop
-  MBFinished:
+    bne .Loop
+  .Finished:
     rts
 
 GameOver:
@@ -485,10 +485,10 @@ GameOver:
   sta balls
 
   ldx #$00
-  GOClearMemory:
+  .Loop:
     sta $0210, x
     inx
-    bne GOClearMemory
+    bne .Loop
 
   lda #$70
   sta $0200
@@ -550,12 +550,12 @@ GameOver:
   sta frames
   jsr WaitFrame
 
-  GOLoopWait:
+  .WaitLoop:
     jsr WaitFrame
     lda time
     cmp #$03
-    bne GOLoopWait
-  GOFinished:
+    bne .WaitLoop
+  .Finished:
     rts
 
 InitMenuScreen:
@@ -586,22 +586,22 @@ InitMenuScreen:
 CheckPlayerCollision:
   lda balls
   cmp #$00
-  beq CPCFinished
+  beq .Finished
   ldx #$00
-  CheckBallR1:
+  .CheckBallR1:
     lda pballs, X
     tay
     lda $0200, Y
     clc
     adc #$08
     cmp $0200
-    bcc NextBall
+    bcc .NextBall
     sta var
     lda $0200
     clc
     adc #$10
     cmp var
-    bcc NextBall
+    bcc .NextBall
     iny
     iny
     iny
@@ -609,20 +609,20 @@ CheckPlayerCollision:
     clc
     adc #$08
     cmp $0203
-    bcc NextBall
+    bcc .NextBall
     sta var
     lda $0203
     clc
     adc #$10
     cmp var
-    bcc NextBall
+    bcc .NextBall
     jsr GameOver
     rts
-  NextBall:
+  .NextBall:
     inx
     cpx balls
-    bne CheckBallR1
-  CPCFinished:
+    bne .CheckBallR1
+  .Finished:
     rts
 
 FlashStart:
@@ -633,68 +633,68 @@ FlashStart:
   lda #$0B
   sta toPPULength
   ldx #$00
-  FSLoop:
+  .Loop:
     lda #$00
     sta time
     sta frames
     txa
     and #$01
-    bne ShowNothing
-    ShowStart:
+    bne .ShowNothing
+    .ShowStart:
       lda #$E0
       sta toPPULocHi
       lda #$00
       sta toPPULocLo
-      jmp SetNeedToPPU
-    ShowNothing:
+      jmp .SetNeedToPPU
+    .ShowNothing:
       lda #$E2
       sta toPPULocHi
       lda #$8A
       sta toPPULocLo
-    SetNeedToPPU:
+    .SetNeedToPPU:
       lda #$01
       sta needToPPU
-    FSLoopWait:
+    .LoopWait:
       jsr WaitFrame
       lda frames
       cmp #$08
-      bne FSLoopWait
+      bne .LoopWait
       inx
       cpx #$06
-      beq FSFinished
-      jmp FSLoop
-  FSFinished:
+      beq .Finished
+      jmp .Loop
+  .Finished:
     rts
 
 DoFrame:
   jsr ReadController
   lda gameState
   cmp #$01
-  beq InGame
+  beq .InGame
   cmp #$02
-  beq GameOverScreen
-  MenuScreen:
+  beq .GameOverScreen
+  .MenuScreen:
     inc prngSeed
     lda controller
     and #%00010000
-    beq Finished
+    beq .Finished
     jsr FlashStart
     lda #$01
     sta gameState
     jsr InitPlay
-  InGame:
+  .InGame:
     jsr ReadController
     jsr HandleControllerInput
     jsr SpawnBall
     jsr MoveBalls
     jsr CheckPlayerCollision
     jsr IncrementScore
-    jmp Finished
-  GameOverScreen:
+    jmp .Finished
+  .GameOverScreen:
     lda #$00
     sta gameState
     jsr InitMenuScreen
-  Finished:
+  .Finished:
     jsr WaitFrame
     jmp DoFrame
 
@@ -708,52 +708,52 @@ NMI:
   sta $2003
   lda #$02
   sta $4014
-  ppuUpdate:
+  .ppuUpdate:
     lda needToPPU
-    beq ppuRegUpdate
+    beq .ppuRegUpdate
     CopyToPPUInit toPPUHi, toPPULo
     ldy #$00
-    LoadPPULoop:
+    .Loop:
       lda [toPPULocLo], Y
       sta $2007
       iny
       cpy toPPULength
-      bne LoadPPULoop
+      bne .Loop
     lda #$00
     sta needToPPU
-  ppuRegUpdate:
+  .ppuRegUpdate:
     lda needPPUReg
-    beq ScoreUpdate
+    beq .ScoreUpdate
     lda soft2001
     sta $2001
     lda soft2000
     sta $2000
     lda #$00
     sta needPPUReg
-  ScoreUpdate:
+  .ScoreUpdate:
     lda needScore
-    beq ScrollUpdate
+    beq .ScrollUpdate
     lda gameState
     cmp #$01
-    bne ScrollUpdate
+    bne .ScrollUpdate
     jsr DrawScore
     lda #$00
     sta needScore
-  ScrollUpdate:
+  .ScrollUpdate:
     bit $2002
     lda xscroll
     sta $2005
     lda yscroll
     sta $2005
-  nmiFinished:
+  .nmiFinished:
     inc frames
     lda frames
     cmp #$3C
-    bne FramesFinished
+    bne .FramesFinished
     lda #$00
     sta frames
     inc time
-  FramesFinished:
+  .FramesFinished:
     lda #$00
     sta sleeping
     pla
