@@ -35,6 +35,7 @@ var         .rs 1
 gameState   .rs 1
 balls       .rs 1
 score       .rs 5
+playermoved .rs 1
 pballs      .rs 16
 xsballs     .rs 16
 ysballs     .rs 16
@@ -249,6 +250,8 @@ ReadController:
   rts
 
 HandleControllerInput:
+  lda #$00
+  sta playermoved
   lda controller
   and #%00001000
   beq UpDone
@@ -256,6 +259,8 @@ HandleControllerInput:
   Decrement $0204
   Decrement $0208
   Decrement $020C
+  lda #$01
+  sta playermoved
   UpDone:
     lda controller
     and #%00000100
@@ -264,6 +269,8 @@ HandleControllerInput:
     Increment $0204
     Increment $0208
     Increment $020C
+    lda #$01
+    sta playermoved
   DownDone:
     lda controller
     and #%00000010
@@ -272,6 +279,8 @@ HandleControllerInput:
     Decrement $0207
     Decrement $020B
     Decrement $020F
+    lda #$01
+    sta playermoved
   LeftDone:
     lda controller
     and #%00000001
@@ -280,6 +289,8 @@ HandleControllerInput:
     Increment $0207
     Increment $020B
     Increment $020F
+    lda #$01
+    sta playermoved
   RightDone:
     rts
 
@@ -311,21 +322,25 @@ InitPlay:
 
 IncrementScore:
   ldx #$00
+  lda playermoved
+  cmp #$01
+  beq ISFinished
   ISLoop:
     lda score, X
     clc
     adc #$01
     sta score, X
     cmp #$0A
-    bne ISFinished
+    bne ISIncFinished
     lda #$00
     sta score, X
     inx
     cpx #$04
     bne ISLoop
-  ISFinished:
+  ISIncFinished:
     lda #$01
     sta needScore
+  ISFinished:
     rts
 
 DrawScore:
@@ -747,8 +762,8 @@ NMI:
   .include "backgrounds.asm"
 
 palette:
-  .db $2d,$17,$28,$39,$2d,$17,$28,$39,$2d,$17,$28,$39,$2d,$17,$28,$39
-  .db $2d,$17,$28,$39,$2d,$17,$28,$39,$2d,$17,$28,$39,$2d,$17,$28,$39
+  .db $0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39
+  .db $0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39
 
 sprites:
   .db $70, $02, $00, $70
