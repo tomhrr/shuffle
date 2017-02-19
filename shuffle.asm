@@ -41,6 +41,7 @@ xsballs     .rs 16
 ysballs     .rs 16
 xsiballs    .rs 16
 ysiballs    .rs 16
+sprpal      .rs 1
 
 SCORE_BG_INDEX_HI = $24
 SCORE_BG_INDEX_LO = $41
@@ -369,13 +370,21 @@ SpawnBall:
   tax
   lda pballs, X
   tay
-  lda #$10
-  sta $0200, Y
-  iny
   lda #$00
   sta $0200, Y
   iny
   lda #$00
+  sta $0200, Y
+  iny
+  inc sprpal
+  lda sprpal
+  and #$03
+  cmp #$00
+  bne SBContinue
+  inc sprpal
+  lda sprpal
+  and #$03
+  SBContinue:
   sta $0200, Y
   iny
   jsr PRNG
@@ -763,7 +772,7 @@ NMI:
 
 palette:
   .db $0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39
-  .db $0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39,$0f,$17,$28,$39
+  .db $0f,$17,$28,$02,$0f,$21,$32,$32,$0f,$25,$36,$36,$0f,$2a,$3a,$3a
 
 sprites:
   .db $70, $02, $00, $70
