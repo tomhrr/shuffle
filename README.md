@@ -1,6 +1,6 @@
 ## shuffle
 
-[![Build Status](https://github.com/tomhrr/shuffle/workflows/build/badge.svg?branch=master)](https://github.com/tomhrr/shuffle/actions)
+[![Build Status](https://github.com/tomhrr/shuffle/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/tomhrr/shuffle/actions)
 
 A very basic NES game, implemented using 6502 assembly.  Build
 requires [NESASM3](https://github.com/toastynerd/nesasm).
